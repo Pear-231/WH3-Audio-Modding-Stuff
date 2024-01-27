@@ -21,10 +21,18 @@ ids_to_replace = [
     
         # Mixer IDs
         # The mixer ID seems to matter for non-vo audio (at least sometimes) e.g. when escaping from a movie the sound will continue unless the ID matches vanilla...
-        (982557232, 659413513), # Quest Battle Mixer
+        (982557232, 659413513),     # Quest Battle Mixer
+        #(652848367, 848372985),     # Music Container
+        #(240250814, 698158058),     # Music Container
+        #(298137004, 1042256876),     # Music Container
+        #(683666133, 148962132),     # Music Container
+
 
         # Audio Bus IDs
-        ("replace_236083155", 236083155), # Quest Battle Audio Bus
+        ("replace_236083155", 236083155),       # Quest Battle 
+        ("replace_3267614108", 3267614108),     # Music
+        ("replace_3128400633", 3128400633),     # Music
+        ("replace_3356399930", 3356399930),     # Music
 
         # Game Parameter IDs
         ("replace_583154410", 583154410), # Game Parameter
@@ -99,41 +107,44 @@ def get_wem_ids():
     print("wem_ids: " + str(wem_ids))
     return wem_ids
 
-# Get the IDs of all non mixer objects so they can be scrambled.
-def get_non_mixer_ids(bnk_path):
+# Get the IDs of objects we don't want to scramble due to their significance e.g. event names in dat files or that their IDs are definitively replaced e.g. mixers.
+def get_non_scramble_ids(bnk_path):
     object_ids = []
     with open(bnk_path, "rb") as file:
         # Header
         BKHD = file.read(4).decode('UTF-8')
         assert BKHD == "BKHD", "Invalid header in " + bnk_path
-        chunk_size  = struct.unpack("<L", file.read(4))[0]
-        file.read(chunk_size)
+        dwChunkSize  = struct.unpack("<L", file.read(4))[0]
+        file.read(dwChunkSize)
         HIRC = file.read(4).decode('UTF-8')
         assert HIRC == "HIRC", "Invalid header in " + bnk_path
-        chunk_size = struct.unpack("<L", file.read(4))[0]
-        num_items = struct.unpack("<L", file.read(4))[0]
+        struct.unpack("<L", file.read(4))[0]
+        numReleasableHircItem = struct.unpack("<L", file.read(4))[0]
         
-        # HIRC items
-        for _ in range(num_items):
-            hirc_type = struct.unpack("<b", file.read(1))[0]
+        # Hirc items
+        for _ in range(numReleasableHircItem):
+            eHircType = struct.unpack("<b", file.read(1))[0]
             section_size = struct.unpack("<L", file.read(4))[0]
-            id = struct.unpack("<L", file.read(4))[0]
+            ulID = struct.unpack("<L", file.read(4))[0]
+            print("eHircType: " + str(eHircType))
             
             # If the object is not a mixer add it to the list
-            if (hirc_type != 7): # Mixer is hirc type 7 (can be found by viewing a bnk in wwiser e.g. 0x07 [Actor-Mixer])
-                object_ids.append(id)
+            if (eHircType != 4 and eHircType != 7 and eHircType != 12 and eHircType != 13): # 0x04 [Event], 0x07 [Actor-Mixer] = 7, 0x0C [Music Switch] = 12, 0x0D [Music Random Sequence] = 13 (can be found by viewing a bnk in wwiser)
+                print("Adding ulID " + str(ulID) + " to object_ids")
+                object_ids.append(ulID)
                 
-            # Skip ahead to next
+            # Skip ahead to next Hirc Item
             file.read(section_size - 4)
         
     return object_ids
 
 # Scramble the IDs. This is necessary to prevent any conflicts arising.
 def scramble_hirc_ids(bnk_path):
-    object_ids = get_non_mixer_ids(bnk_path)    
+    object_ids = get_non_scramble_ids(bnk_path)    
     replacement_pairs = []
     for object_id in object_ids:
         new_id = compute_wwise_hash(os.path.splitext(os.path.basename(bnk_path))[0] + str(object_id))
+        print("Renaming " + str(object_id) + " to " + str(new_id))
         replacement_pairs.append((object_id, new_id))
 
     replace_ids(replacement_pairs, bnk_path)
@@ -177,9 +188,9 @@ def patch_bnk(input_bnk_path, output_bnk_path):
             output_file.write(struct.pack("<L", dwSoundBankID))
 
             dwLanguageID = struct.unpack("<L", input_file.read(4))[0]
-            if dwLanguageID != 550298558:
-                dwLanguageID = 550298558
-                print("Changed dwLanguageID in header to " + str(dwLanguageID))
+            #if dwLanguageID != 550298558:
+            #    dwLanguageID = 550298558
+            #    print("Changed dwLanguageID in header to " + str(dwLanguageID))
             output_file.write(struct.pack("<L", dwLanguageID))
             
             chunk = input_file.read(4)
@@ -201,9 +212,11 @@ def patch_bnk(input_bnk_path, output_bnk_path):
             
             hirc_dwChunkSize = struct.unpack("<L", input_file.read(4))[0]
             hirc_dwChunkSize_pos = output_file.tell()  # Remember the position of dwChunkSize in the output file
+            print("hirc_dwChunkSize: " + str(hirc_dwChunkSize))
             output_file.write(struct.pack("<L", hirc_dwChunkSize))
             
             numReleasableHircItem = struct.unpack("<L", input_file.read(4))[0]
+            print("numReleasableHircItem: " + str(numReleasableHircItem))
             output_file.write(struct.pack("<L", numReleasableHircItem))
             
             # Initialize a variable to track the total size increase for all HIRC items
@@ -224,9 +237,11 @@ def patch_bnk(input_bnk_path, output_bnk_path):
                 print("dwSectionSize: " + str(dwSectionSize))
                 output_file.write(struct.pack("<L", dwSectionSize))
 
-                ulID = struct.unpack("<L", input_file.read(4))[0]
+                ulID = struct.unpack("I", input_file.read(4))[0]
                 print("ulID: " + str(ulID))
-                output_file.write(struct.pack("<L",ulID))
+                output_file.write(struct.pack("<I",ulID))
+                read_size = 4
+
 
                 # Patch any Music Switch or Music Random Sequence Container objects if found.
                 if eHircType == 12 or eHircType == 13:  # 0x0C [Music Switch] = 12, 0x0D [Music Random Sequence] = 13
@@ -243,7 +258,6 @@ def patch_bnk(input_bnk_path, output_bnk_path):
                     uNumFx = struct.unpack("<b", input_file.read(1))[0]
                     print("uNumFx: " + str(uNumFx))
                     output_file.write(struct.pack("<b", uNumFx))
-
 
                     bOverrideAttachmentParams = struct.unpack("<b", input_file.read(1))[0]
                     print("bOverrideAttachmentParams: " + str(bOverrideAttachmentParams))
@@ -265,7 +279,7 @@ def patch_bnk(input_bnk_path, output_bnk_path):
                     cProps = struct.unpack("<b", input_file.read(1))[0]
                     print("cProps:", cProps)
                     output_file.write(struct.pack("<b", cProps))
-                    read_size = 14
+                    read_size += 14
                     
                     for _ in range(cProps):
                         pID = struct.unpack("<b", input_file.read(1))[0]
@@ -330,11 +344,12 @@ def patch_bnk(input_bnk_path, output_bnk_path):
                         auxID4 = struct.unpack("<L", input_file.read(4))[0]
                         print("auxID4: " + str(auxID4))
                         output_file.write(struct.pack("<L", auxID4))
+                        read_size += 16
                         
-                        reflectionsAuxBus = struct.unpack("<L", input_file.read(4))[0]
-                        print("reflectionsAuxBus: " + str(reflectionsAuxBus))
-                        output_file.write(struct.pack("<L", reflectionsAuxBus))
-                        read_size += 20
+                    reflectionsAuxBus = struct.unpack("<L", input_file.read(4))[0]
+                    print("reflectionsAuxBus: " + str(reflectionsAuxBus))
+                    output_file.write(struct.pack("<L", reflectionsAuxBus))
+                    read_size += 4
 
                     # AdvSettingsParams
                     byBitVector = struct.unpack("<b", input_file.read(1))[0]
@@ -420,101 +435,102 @@ def patch_bnk(input_bnk_path, output_bnk_path):
                     output_file.write(struct.pack("<L", numRules))
                     read_size += 31
 
-                    # AkMusicTransitionRule
-                    uNumSrc = struct.unpack("<L", input_file.read(4))[0]
-                    print("uNumSrc: " + str(uNumSrc)) 
-                    output_file.write(struct.pack("<L", uNumSrc))
-                    
-                    srcID = struct.unpack("<i", input_file.read(4))[0]
-                    print("srcID: " + str(srcID)) 
-                    output_file.write(struct.pack("<i", srcID))
-                    
-                    uNumDst = struct.unpack("<L", input_file.read(4))[0]
-                    print("uNumDst: " + str(uNumDst)) 
-                    output_file.write(struct.pack("<L", uNumDst))
-                    
-                    dstID = struct.unpack("<i", input_file.read(4))[0]
-                    print("dstID: " + str(dstID)) 
-                    output_file.write(struct.pack("<i", dstID))
-                    read_size += 16
+                    for _ in range(numRules):   
+                        # AkMusicTransitionRule
+                        uNumSrc = struct.unpack("<L", input_file.read(4))[0]
+                        print("uNumSrc: " + str(uNumSrc)) 
+                        output_file.write(struct.pack("<L", uNumSrc))
+                        
+                        srcID = struct.unpack("<i", input_file.read(4))[0]
+                        print("srcID: " + str(srcID)) 
+                        output_file.write(struct.pack("<i", srcID))
+                        
+                        uNumDst = struct.unpack("<L", input_file.read(4))[0]
+                        print("uNumDst: " + str(uNumDst)) 
+                        output_file.write(struct.pack("<L", uNumDst))
+                        
+                        dstID = struct.unpack("<i", input_file.read(4))[0]
+                        print("dstID: " + str(dstID)) 
+                        output_file.write(struct.pack("<i", dstID))
+                        read_size += 16
 
-                    # AkMusicTransSrcRule
-                    transitionTime = struct.unpack("<i", input_file.read(4))[0]
-                    print("transitionTime: " + str(transitionTime)) 
-                    output_file.write(struct.pack("<i", transitionTime))
-                    
-                    eFadeCurve = struct.unpack("<L", input_file.read(4))[0]
-                    print("eFadeCurve: " + str(eFadeCurve)) 
-                    output_file.write(struct.pack("<L", eFadeCurve))
-                    
-                    iFadeOffset = struct.unpack("<i", input_file.read(4))[0]
-                    print("iFadeOffset: " + str(iFadeOffset)) 
-                    output_file.write(struct.pack("<i", iFadeOffset))
-                    
-                    eSyncType = struct.unpack("<L", input_file.read(4))[0]
-                    print("eSyncType: " + str(eSyncType)) 
-                    output_file.write(struct.pack("<L", eSyncType))
-                    
-                    uCueFilterHash = struct.unpack("<L", input_file.read(4))[0]
-                    print("uCueFilterHash: " + str(uCueFilterHash)) 
-                    output_file.write(struct.pack("<L", uCueFilterHash))
-                    
-                    bPlayPostExit = struct.unpack("<b", input_file.read(1))[0]
-                    print("bPlayPostExit: " + str(bPlayPostExit)) 
-                    output_file.write(struct.pack("<b", bPlayPostExit))
-                    read_size += 21
-                    
-                    # AkMusicTransDstRule
-                    transitionTime = struct.unpack("<i", input_file.read(4))[0]
-                    print("transitionTime: " + str(transitionTime)) 
-                    output_file.write(struct.pack("<i", transitionTime))
-                    
-                    eFadeCurve = struct.unpack("<L", input_file.read(4))[0]
-                    print("eFadeCurve: " + str(eFadeCurve)) 
-                    output_file.write(struct.pack("<L", eFadeCurve))
-                    
-                    iFadeOffset = struct.unpack("<i", input_file.read(4))[0]
-                    print("iFadeOffset: " + str(iFadeOffset)) 
-                    output_file.write(struct.pack("<i", iFadeOffset))
-                    
-                    uCueFilterHash = struct.unpack("<L", input_file.read(4))[0]
-                    print("uCueFilterHash: " + str(uCueFilterHash)) 
-                    output_file.write(struct.pack("<L", uCueFilterHash))
-                    
-                    uJumpToID = struct.unpack("<L", input_file.read(4))[0]
-                    print("uJumpToID:", uJumpToID)
-                    output_file.write(struct.pack("<L", uJumpToID))
-                    
-                    eJumpToType = struct.unpack("<H", input_file.read(2))[0]
-                    print("eJumpToType:", eJumpToType)
-                    output_file.write(struct.pack("<H", eJumpToType))
-                    
-                    eEntryType = struct.unpack("<H", input_file.read(2))[0] 
-                    print("eEntryType:", eEntryType)
-                    output_file.write(struct.pack("<H", eEntryType))
-                    
-                    bPlayPreEntry = struct.unpack("<b", input_file.read(1))[0]
-                    print("bPlayPreEntry: " + str(bPlayPreEntry))  
-                    output_file.write(struct.pack("<b", bPlayPreEntry))
-                    
-                    bDestMatchSourceCueName = struct.unpack("<b", input_file.read(1))[0]
-                    print("bDestMatchSourceCueName: " + str(bDestMatchSourceCueName)) 
-                    output_file.write(struct.pack("<b", bDestMatchSourceCueName))
-                    read_size += 26
+                        # AkMusicTransSrcRule
+                        transitionTime = struct.unpack("<i", input_file.read(4))[0]
+                        print("transitionTime: " + str(transitionTime)) 
+                        output_file.write(struct.pack("<i", transitionTime))
+                        
+                        eFadeCurve = struct.unpack("<L", input_file.read(4))[0]
+                        print("eFadeCurve: " + str(eFadeCurve)) 
+                        output_file.write(struct.pack("<L", eFadeCurve))
+                        
+                        iFadeOffset = struct.unpack("<i", input_file.read(4))[0]
+                        print("iFadeOffset: " + str(iFadeOffset)) 
+                        output_file.write(struct.pack("<i", iFadeOffset))
+                        
+                        eSyncType = struct.unpack("<L", input_file.read(4))[0]
+                        print("eSyncType: " + str(eSyncType)) 
+                        output_file.write(struct.pack("<L", eSyncType))
+                        
+                        uCueFilterHash = struct.unpack("<L", input_file.read(4))[0]
+                        print("uCueFilterHash: " + str(uCueFilterHash)) 
+                        output_file.write(struct.pack("<L", uCueFilterHash))
+                        
+                        bPlayPostExit = struct.unpack("<b", input_file.read(1))[0]
+                        print("bPlayPostExit: " + str(bPlayPostExit)) 
+                        output_file.write(struct.pack("<b", bPlayPostExit))
+                        read_size += 21
 
-                    # This the v136 stuff we've been after! 
-                    allocTransObjectFlag = struct.unpack("<b", input_file.read(1))[0]
-                    print("allocTransObjectFlag: " + str(allocTransObjectFlag)) 
-                    output_file.write(struct.pack("<b", allocTransObjectFlag))
-                    read_size += 1
+                        # AkMusicTransDstRule
+                        transitionTime = struct.unpack("<i", input_file.read(4))[0]
+                        print("transitionTime: " + str(transitionTime)) 
+                        output_file.write(struct.pack("<i", transitionTime))
+                        
+                        eFadeCurve = struct.unpack("<L", input_file.read(4))[0]
+                        print("eFadeCurve: " + str(eFadeCurve)) 
+                        output_file.write(struct.pack("<L", eFadeCurve))
+                        
+                        iFadeOffset = struct.unpack("<i", input_file.read(4))[0]
+                        print("iFadeOffset: " + str(iFadeOffset)) 
+                        output_file.write(struct.pack("<i", iFadeOffset))
+                        
+                        uCueFilterHash = struct.unpack("<L", input_file.read(4))[0]
+                        print("uCueFilterHash: " + str(uCueFilterHash)) 
+                        output_file.write(struct.pack("<L", uCueFilterHash))
+                        
+                        uJumpToID = struct.unpack("<L", input_file.read(4))[0]
+                        print("uJumpToID:", uJumpToID)
+                        output_file.write(struct.pack("<L", uJumpToID))
+                        
+                        eJumpToType = struct.unpack("<H", input_file.read(2))[0]
+                        print("eJumpToType:", eJumpToType)
+                        output_file.write(struct.pack("<H", eJumpToType))
+                        
+                        eEntryType = struct.unpack("<H", input_file.read(2))[0] 
+                        print("eEntryType:", eEntryType)
+                        output_file.write(struct.pack("<H", eEntryType))
+                        
+                        bPlayPreEntry = struct.unpack("<b", input_file.read(1))[0]
+                        print("bPlayPreEntry: " + str(bPlayPreEntry))  
+                        output_file.write(struct.pack("<b", bPlayPreEntry))
+                        
+                        bDestMatchSourceCueName = struct.unpack("<b", input_file.read(1))[0]
+                        print("bDestMatchSourceCueName: " + str(bDestMatchSourceCueName)) 
+                        output_file.write(struct.pack("<b", bDestMatchSourceCueName))
+                        read_size += 26
 
-                    # Adds the new data in.
-                    output_file.write(new_data) 
-                    total_size_increase += len(new_data)
-                    print("total size increase at this point is: " + str(total_size_increase))
+                        # This the v136 stuff we've been after! 
+                        allocTransObjectFlag = struct.unpack("<b", input_file.read(1))[0]
+                        print("allocTransObjectFlag: " + str(allocTransObjectFlag)) 
+                        output_file.write(struct.pack("<b", allocTransObjectFlag))
+                        read_size += 1
+
+                        # Adds the new data in.
+                        output_file.write(new_data) 
+                        total_size_increase += len(new_data)
+                        print("total size increase at this point is: " + str(total_size_increase))
 
                     # Calculate remaining size and read the rest of the HIRC item
-                    remaining_size = dwSectionSize - read_size - 4
+                    remaining_size = dwSectionSize - read_size
                     if remaining_size > 0:
                         print("Writing rest_of_hirc bytes: " + str(remaining_size))
                         rest_of_hirc = input_file.read(remaining_size)
@@ -567,6 +583,6 @@ for i in range(len(bnk_paths)):
 # "<b" = u8             (1 byte)
 # "<H" = u16            (2 bytes)
 # "<L" = u32 / tid      (4 bytes) unsigned 32-bit integer (positive numbers)
-# "<i" = s32 / tid      (4 bytes) signed 32-bit integer (positive and negative numbers)
+# "<I" = s32 / sid      (4 bytes) signed 32-bit integer (positive and negative numbers)
 # "<f" = f32            (4 bytes)
 # "<d" = d64            (8 bytes)
