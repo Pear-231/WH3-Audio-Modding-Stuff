@@ -1,0 +1,18 @@
+{
+    "version":2,
+    "commands":[
+        {
+            "id":"ak.rename-random-container-to-path",
+            "displayName":"Rename Random Container To Path",
+            "defaultShortcut":"Ctrl+Shift+R",
+            "program":"py.exe",
+            "startMode":"MultipleSelectionSingleProcessSpaceSeparated",
+            "args":"-3 ${CurrentCommandDirectory}\\..\\rename_random_container_to_path\\rename_random_container_to_path.py", 
+            "cwd":"",
+            "contextMenu":{
+                "basePath":"Audio Mixer Tools",
+                "enabledFor":"RandomSequenceContainer"
+            }
+        }          
+    ]
+}

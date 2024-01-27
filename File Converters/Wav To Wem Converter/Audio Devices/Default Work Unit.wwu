@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WwiseDocument Type="WorkUnit" ID="{E37B06A4-08ED-4004-A2DF-5E53BF45312D}" SchemaVersion="97">
+	<AudioDevices>
+		<WorkUnit Name="Default Work Unit" ID="{E37B06A4-08ED-4004-A2DF-5E53BF45312D}" PersistMode="Standalone">
+			<ChildrenList>
+				<AudioDevice Name="System" ID="{A6E034B6-EE48-4B69-8CF4-B4B38996581B}" PluginName="System" CompanyID="0" PluginID="174" PluginType="7"/>
+				<AudioDevice Name="No_Output" ID="{B4F79AF1-D33F-422A-99FF-B3E1B6FF094E}" PluginName="No Output" CompanyID="0" PluginID="181" PluginType="7"/>
+				<AudioDevice Name="Default_Motion_Device" ID="{719D3B62-AB7D-46FA-9BC3-BF76F3B0875F}" PluginName="Wwise Motion" CompanyID="0" PluginID="507" PluginType="7"/>
+			</ChildrenList>
+		</WorkUnit>
+	</AudioDevices>
+</WwiseDocument>

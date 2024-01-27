@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ExternalSourcesList SchemaVersion="1" Root="convert\input">
+	<Source Path="abby_final_battle_pt_01.wav" Conversion="Vorbis Quality High" />
+	<Source Path="abby_final_battle_pt_02.wav" Conversion="Vorbis Quality High" />
+	<Source Path="abby_final_battle_pt_03.wav" Conversion="Vorbis Quality High" />
+	<Source Path="abby_final_battle_pt_04.wav" Conversion="Vorbis Quality High" />
+	<Source Path="ascetic_anchorites_01.wav" Conversion="Vorbis Quality High" />
+	<Source Path="ascetic_anchorites_02.wav" Conversion="Vorbis Quality High" />
+	<Source Path="ascetic_anchorites_03.wav" Conversion="Vorbis Quality High" />
+	<Source Path="a_clash_with_the_chittering_horde_01.wav" Conversion="Vorbis Quality High" />
+	<Source Path="a_clash_with_the_chittering_horde_02.wav" Conversion="Vorbis Quality High" />
+	<Source Path="a_clash_with_the_chittering_horde_03.wav" Conversion="Vorbis Quality High" />
+	<Source Path="a_clash_with_the_chittering_horde_04.wav" Conversion="Vorbis Quality High" />
+	<Source Path="a_clash_with_the_chittering_horde_05.wav" Conversion="Vorbis Quality High" />
+	<Source Path="a_clash_with_the_chittering_horde_06.wav" Conversion="Vorbis Quality High" />
+	<Source Path="khornes_savage_crusaders_01.wav" Conversion="Vorbis Quality High" />
+	<Source Path="khornes_savage_crusaders_02.wav" Conversion="Vorbis Quality High" />
+	<Source Path="khornes_savage_crusaders_03.wav" Conversion="Vorbis Quality High" />
+	<Source Path="khornes_savage_crusaders_04.wav" Conversion="Vorbis Quality High" />
+	<Source Path="khornes_savage_crusaders_05.wav" Conversion="Vorbis Quality High" />
+	<Source Path="the_brass_towers_mongrol_dog_01.wav" Conversion="Vorbis Quality High" />
+	<Source Path="the_brass_towers_mongrol_dog_02.wav" Conversion="Vorbis Quality High" />
+	<Source Path="the_brass_towers_mongrol_dog_03.wav" Conversion="Vorbis Quality High" />
+	<Source Path="the_towers_master_01.wav" Conversion="Vorbis Quality High" />
+	<Source Path="the_towers_master_02.wav" Conversion="Vorbis Quality High" />
+	<Source Path="the_towers_master_03.wav" Conversion="Vorbis Quality High" />
+	<Source Path="the_towers_master_04.wav" Conversion="Vorbis Quality High" />
+	<Source Path="the_towers_master_05.wav" Conversion="Vorbis Quality High" />
+	<Source Path="wandering_tides_of_green_01.wav" Conversion="Vorbis Quality High" />
+	<Source Path="wandering_tides_of_green_02.wav" Conversion="Vorbis Quality High" />
+	<Source Path="wandering_tides_of_green_03.wav" Conversion="Vorbis Quality High" />
+</ExternalSourcesList>
