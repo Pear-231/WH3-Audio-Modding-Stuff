@@ -1,34 +1,101 @@
-# Put the path for your dat file here.
-dat_path= "C:/path/to/your/example.dat"
-
 # Add your events to the list.
-events = [
-    "Play_example_event_goes_here_01",
-    "Play_example_event_goes_here_02",
-    # Add more strings as needed.
-]
+project_file_example = {
+    "Events": [
+        "Play_example_event_goes_here_01"
+    ],
+    "BnkName": "global_movies_test"
+}
 
-def create_dat_file(strings_to_add, dat_path):
-    # Create the binary data.
-    header = bytearray(b"\x25\x00\x00\x00")
-    data = header
+# Put the path for your dat file here.
+output_path = "C:/Users/george/Downloads/"
 
-    for string in strings_to_add:
-        length = len(string).to_bytes(4, byteorder='little') # Length of the current string.
-        utf8_string = string.encode('utf-8') # Current string encoded in utf-8.
-        padding = bytearray(b"\x00\x00\xc8\x43")  # 00 00 C8 43
+import struct
+import io
 
-        data += length  
-        data += utf8_string  
-        data += padding
+class SoundDatFile:
+    def __init__(self):
+        self.Event0 = []
+        self.EnumGroup0 = []
+        self.EnumGroup1 = []
+        self.VoiceEvents = []
+        self.SettingValues = []
+        self.Unknown = []
 
-    footer = bytearray(b"\x00\x00\x00\x00") * 5 
-    data += footer
+    class EventWithValue:
+        def __init__(self, event_name, value):
+            self.EventName = event_name
+            self.Value = value
 
-    # Write the data to a DAT file.
-    with open(dat_path, "wb") as file:
-        file.write(data)
+def get_as_byte_array(dat_file):
+    mem_stream = io.BytesIO()
 
-    print(f"Woo dat file '{dat_path}' created successfully.")
+    # Event0
+    mem_stream.write(struct.pack('<I', len(dat_file.Event0)))
+    for event in dat_file.Event0:
+        mem_stream.write(write_str32(event.EventName))
+        mem_stream.write(struct.pack('<f', event.Value))
 
-create_dat_file(events, dat_path)
+    # EnumGroup0
+    mem_stream.write(struct.pack('<I', len(dat_file.EnumGroup0)))
+    for enum in dat_file.EnumGroup0:
+        mem_stream.write(write_str32(enum.EnumName))
+        mem_stream.write(struct.pack('<I', len(enum.EnumValues)))
+        for enum_value in enum.EnumValues:
+            mem_stream.write(write_str32(enum_value))
+
+    # EnumGroup1
+    mem_stream.write(struct.pack('<I', len(dat_file.EnumGroup1)))
+    for enum in dat_file.EnumGroup1:
+        mem_stream.write(write_str32(enum.EnumName))
+        mem_stream.write(struct.pack('<I', len(enum.EnumValues)))
+        for enum_value in enum.EnumValues:
+            mem_stream.write(write_str32(enum_value))
+
+    # VoiceEvents
+    mem_stream.write(struct.pack('<I', len(dat_file.VoiceEvents)))
+    for event in dat_file.VoiceEvents:
+        mem_stream.write(write_str32(event.EventName))
+        mem_stream.write(struct.pack('<I', len(event.Values)))
+        for value in event.Values:
+            mem_stream.write(struct.pack('<I', value))
+
+    # SettingValues
+    mem_stream.write(struct.pack('<I', len(dat_file.SettingValues)))
+    for value in dat_file.SettingValues:
+        mem_stream.write(write_str32(value.EventName))
+        mem_stream.write(struct.pack('<f', value.MinValue))
+        mem_stream.write(struct.pack('<f', value.MaxValue))
+
+    # Unknown
+    mem_stream.write(struct.pack('<I', len(dat_file.Unknown)))
+    for value in dat_file.Unknown:
+        mem_stream.write(write_str32(value))
+
+    return mem_stream.getvalue()
+
+def read_str32(chunk):
+    # Implementation for reading a string from the byte chunk.
+    str_length = struct.unpack('<I', chunk.read(4))[0]
+    return chunk.read(str_length).decode('utf-8')
+
+def write_str32(string):
+    # Implementation for writing a string to a byte array.
+    encoded_str = string.encode('utf-8')
+    return struct.pack('<I', len(encoded_str)) + encoded_str
+
+def build_dat(project_file):
+    output_name = f"event_data__{project_file['BnkName']}.dat"
+    dat_file = SoundDatFile()
+
+    for wwise_event in project_file['Events']:
+        dat_file.Event0.append(SoundDatFile.EventWithValue(wwise_event, 400))
+
+    bytes_data = get_as_byte_array(dat_file)
+    # You would replace '/path/to/your/output' with the actual path where you want the file saved
+    with open(f"{output_path}{output_name}", 'wb') as file:
+        file.write(bytes_data)
+
+    return output_name
+
+output_file = build_dat(project_file_example)
+print(f"File saved as: {output_file}")

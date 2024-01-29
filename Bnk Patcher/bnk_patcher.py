@@ -10,8 +10,11 @@ bnk_paths = [
 # The path to a folder containing the wem files used in your bnk. If scramble_wems is set to True you must provide a path.
 wems_path = "C:/wem/folder/path/goes/here/"
 
-# Change this to True if you want to scramble wem IDs. You should do this if you want to avoid potential conflicts with vanilla wems or wems others have made.
+# Change this to True / False if you do / don't want to scramble wem IDs. You should do this if you want to avoid potential conflicts with vanilla wems or wems others have made.
 scramble_wems = False
+
+# Change this to True if you do / don't want to make sure the language is the english(uk) folder.
+make_language_english_uk = True
 
 # The specific IDs that need replacing. This should be any object in the Wwise project with the name replace_some_id.
 ids_to_replace = [     
@@ -22,10 +25,11 @@ ids_to_replace = [
         # Mixer IDs
         # The mixer ID seems to matter for non-vo audio (at least sometimes) e.g. when escaping from a movie the sound will continue unless the ID matches vanilla...
         (982557232, 659413513),     # Quest Battle Mixer
-        #(652848367, 848372985),     # Music Container
-        #(240250814, 698158058),     # Music Container
-        #(298137004, 1042256876),     # Music Container
-        #(683666133, 148962132),     # Music Container
+        (652848367, 848372985),     # Music Container
+        (240250814, 698158058),     # Music Container
+        (298137004, 1042256876),    # Music Container
+        (683666133, 148962132),     # Music Container
+        (989137633, 573597124),     # Movie Mixer
 
 
         # Audio Bus IDs
@@ -33,6 +37,7 @@ ids_to_replace = [
         ("replace_3267614108", 3267614108),     # Music
         ("replace_3128400633", 3128400633),     # Music
         ("replace_3356399930", 3356399930),     # Music
+        ("replace_3602921883", 3602921883),     # Movie
 
         # Game Parameter IDs
         ("replace_583154410", 583154410), # Game Parameter
@@ -188,9 +193,9 @@ def patch_bnk(input_bnk_path, output_bnk_path):
             output_file.write(struct.pack("<L", dwSoundBankID))
 
             dwLanguageID = struct.unpack("<L", input_file.read(4))[0]
-            #if dwLanguageID != 550298558:
-            #    dwLanguageID = 550298558
-            #    print("Changed dwLanguageID in header to " + str(dwLanguageID))
+            if dwLanguageID != 550298558 and make_language_english_uk == True:
+                dwLanguageID = 550298558
+                print("Changed dwLanguageID in header to " + str(dwLanguageID))
             output_file.write(struct.pack("<L", dwLanguageID))
             
             chunk = input_file.read(4)
