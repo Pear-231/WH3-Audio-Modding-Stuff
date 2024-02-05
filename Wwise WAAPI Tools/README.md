@@ -29,3 +29,6 @@ This generates mixers based with the names of all the dialogue events extracted 
 
 ## states_generator
 This generates all the state groups and states extracted from the WH3 core dat file. 
+
+## mixer_hierarchy_builder
+This generates mixers, random containers, and imports sounds from an input of following a specific folder strucutre.
