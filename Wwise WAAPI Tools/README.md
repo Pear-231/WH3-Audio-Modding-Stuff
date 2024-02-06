@@ -4,7 +4,7 @@ Here are a collection of tools that interact with Wwise's 'WAAPI' API.
 ## Requirements
 - Python 3.6+
 - Wwise and the Wwise SDK Package installed, and the Wwise Authoring API enabled (Project > User Preferences... > Enable Wwise Authoring API)
-- waapi-client python project installed
+- waapi-client python project installed (Paste the following in cmd: `py -3 -m pip install waapi-client scipy`)
 
 ## rename_random_container_to_path
 This renames all selected random containers to the combined path of all decendent objects. This is useful when pathing dialogue event states to see what the container is referring to.
