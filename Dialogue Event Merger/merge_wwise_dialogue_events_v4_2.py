@@ -1,8 +1,6 @@
 import struct
 import os
 
-# If you don't already know what this script does, then reading the below explainations won't help you at all. Go learn some Wwise.
-
 # The input and output paths of your bnks.
 # The path (and filename) of the bnk you made in wwise, with all of those DialogueEvents that have their IDs (and arguments) the same as the vanilla versions
 # The output bnk will be just like your custom bnk, but with the addition of the vanilla decision tree stuff packed inside each DialogueEvent.
