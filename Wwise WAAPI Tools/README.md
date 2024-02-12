@@ -32,3 +32,5 @@ This generates all the state groups and states extracted from the WH3 core dat f
 
 ## mixer_hierarchy_builder
 This generates mixers, random containers, and imports sounds from an input of following a specific folder strucutre.
+### Instructions
+- Replace the path with the folder you want to import.
