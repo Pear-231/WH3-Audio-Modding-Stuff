@@ -285,7 +285,21 @@ def get_state_path(json_data, project_index, event):
     event_data = dialogue_events.get(event, {})
     # Return all keys in the event data dictionary
     return list(event_data.keys())
+
+def string_after_pattern(input_string, pattern):    
+    # Find the position where the pattern starts
+    pattern_start = input_string.find(pattern)
     
+    # Check if the pattern was found
+    if pattern_start != -1:
+        # Calculate the start of the substring after the pattern
+        start_of_substring = pattern_start + len(pattern)
+        
+        # Extract and print the substring
+        result_string = input_string[start_of_substring:]
+
+        return result_string
+ 
 def determine_bnk_name(dialogue_event):
     # Convert the input to lowercase once to optimize comparisons
     folder_lower = dialogue_event.lower()
@@ -367,16 +381,19 @@ def generate_mixer_hierarchy():
                 find_dialogue_event_mixer = client.call("ak.wwise.core.object.get", find_object(dialogue_event_mixer_path))
 
                 vo_culture = get_vo_culture(json_data, index)
-                vo_culture_path = f"{dialogue_event_mixer_path}\\{vo_culture}"
-                print(f"VO_Culture: {vo_culture}")
+                vo_culture_shortened = string_after_pattern(vo_culture, "vo_culture_")
+                vo_culture_path = f"{dialogue_event_mixer_path}\\{vo_culture_shortened}"
+                print(f"vo_culture_shortened: {vo_culture_shortened}")
             
                 author = get_author(json_data)
                 author_path = f"{vo_culture_path}\\{author}"
                 print(f"Author: {author}")
                 
                 vo_actor = get_vo_actor(json_data, index)
-                vo_actor_path = f"{author_path}\\{vo_actor}"
-                print(f"VO_Actor: {vo_actor}")
+                pattern = f"vo_actor_{vo_culture_shortened}_"
+                vo_actor_shortened = string_after_pattern(vo_actor, pattern)
+                vo_actor_path = f"{author_path}\\{vo_actor_shortened}"
+                print(f"vo_actor_shortened: {vo_actor_shortened}")
 
                 def convert_state_path(state_path):
                     # Split the string into segments based on the period character
@@ -393,15 +410,17 @@ def generate_mixer_hierarchy():
                     print(f"State Paths: {state_paths}") 
                     
                     for random_container in state_paths:
+                        mixer_folders = f"[{dialogue_event}][{vo_culture_shortened}][{author}][{vo_actor_shortened}]"
                         random_container_converted = convert_state_path(random_container)
+                        random_container_combined = f"{mixer_folders} - {random_container_converted}" 
 
-                        result = client.call("ak.wwise.core.object.create", create_random_container(random_container_converted, vo_actor_path))
+                        result = client.call("ak.wwise.core.object.create", create_random_container(random_container_combined, vo_actor_path))
 
                         if result:
-                                print(f"Created Random Container: {random_container_converted} with ID: {result['id']}")
+                                print(f"Created Random Container: {random_container_combined} with ID: {result['id']}")
 
                         else:
-                            print(f"Failed to create Sound: {random_container_converted}")
+                            print(f"Failed to create Sound: {random_container_combined}")
                         
                         wav_files = get_sounds_for_state(json_data, index, dialogue_event, random_container)
                         print(f"wav_files: {wav_files}")
@@ -419,7 +438,7 @@ def generate_mixer_hierarchy():
                             wav_extension_removed = wav_name.replace('.wav', '')
                             print(wav_name)
                             print(wav_extension_removed)
-                            sound_path = f"{vo_actor_path}\\{random_container_converted}\\<Sound Voice>{wav_extension_removed}"
+                            sound_path = f"{vo_actor_path}\\{random_container_combined}\\<Sound Voice>{wav_extension_removed}"
                             client.call("ak.wwise.core.audio.import", create_sound(sound_path, wav_path))
 
                 if find_dialogue_event_mixer:
@@ -427,17 +446,17 @@ def generate_mixer_hierarchy():
                     find_vo_culture = client.call("ak.wwise.core.object.get", find_object(vo_culture_path))
 
                     if find_vo_culture:
-                        print(f"Found mixer: {vo_culture}")
+                        print(f"Found mixer: {vo_culture_shortened}")
 
                     else:
-                        print(f"Did not find mixer: {vo_culture}")
-                        result = client.call("ak.wwise.core.object.create", create_mixer(dialogue_event_mixer_path, vo_culture))
+                        print(f"Did not find mixer: {vo_culture_shortened}")
+                        result = client.call("ak.wwise.core.object.create", create_mixer(dialogue_event_mixer_path, vo_culture_shortened))
                     
                         if result:
-                            print(f"Created Mixer: {vo_culture} with ID: {result['id']}")
+                            print(f"Created Mixer: {vo_culture_shortened} with ID: {result['id']}")
                         
                         else:
-                            print(f"Failed to create mixer: {vo_culture}")
+                            print(f"Failed to create mixer: {vo_culture_shortened}")
 
                     find_author = client.call("ak.wwise.core.object.get", find_object(author_path))
                     if find_author:
@@ -457,14 +476,14 @@ def generate_mixer_hierarchy():
                         generate_sounds_and_container()
 
                     else:
-                        print(f"Did not find mixer: {vo_actor}")
-                        result = client.call("ak.wwise.core.object.create", create_mixer(author_path, vo_actor))
+                        print(f"Did not find mixer: {vo_actor_shortened}")
+                        result = client.call("ak.wwise.core.object.create", create_mixer(author_path, vo_actor_shortened))
                         if result:
-                            print(f"Created Mixer: {vo_actor} with ID: {result['id']}")
+                            print(f"Created Mixer: {vo_actor_shortened} with ID: {result['id']}")
                             generate_sounds_and_container()
                         
                         else:
-                            print(f"Failed to create mixer: {vo_actor}")
+                            print(f"Failed to create mixer: {vo_actor_shortened}")
 
             else:
                 print(f"No bnk_name determined for {dialogue_event}.")
