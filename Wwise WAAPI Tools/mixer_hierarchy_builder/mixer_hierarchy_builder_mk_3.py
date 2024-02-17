@@ -378,36 +378,30 @@ def generate_mixer_hierarchy():
                 vo_actor_path = f"{author_path}\\{vo_actor}"
                 print(f"VO_Actor: {vo_actor}")
 
-                def convert_state_paths(state_paths):
-                    # Initialize an empty list to store the converted strings
-                    converted_paths = []
-                    
-                    # Iterate through each string in the input list
-                    for path in state_paths:
-                        # Split the string into segments based on the period character
-                        segments = path.split('.')
-                        # Wrap each segment in square brackets
-                        wrapped_segments = ['[' + segment + ']' for segment in segments]
-                        # Concatenate the modified segments back together
-                        converted_path = ''.join(wrapped_segments)
-                        # Add the converted string to the list
-                        converted_paths.append(converted_path)
-                    
-                    return converted_paths
+                def convert_state_path(state_path):
+                    # Split the string into segments based on the period character
+                    segments = state_path.split('.')
+                    # Wrap each segment in square brackets
+                    wrapped_segments = ['[' + segment + ']' for segment in segments]
+                    # Concatenate the modified segments back together
+                    converted_path = ''.join(wrapped_segments)
+                    # Add the converted string to the list                    
+                    return converted_path
 
                 def generate_sounds_and_container(): 
                     state_paths = get_state_path(json_data, index, dialogue_event)
-                    state_paths = convert_state_paths(state_paths)
                     print(f"State Paths: {state_paths}") 
                     
                     for random_container in state_paths:
-                        result = client.call("ak.wwise.core.object.create", create_random_container(random_container, vo_actor_path))
+                        random_container_converted = convert_state_path(random_container)
+
+                        result = client.call("ak.wwise.core.object.create", create_random_container(random_container_converted, vo_actor_path))
 
                         if result:
-                                print(f"Created Random Container: {random_container} with ID: {result['id']}")
+                                print(f"Created Random Container: {random_container_converted} with ID: {result['id']}")
 
                         else:
-                            print(f"Failed to create Sound: {random_container}")
+                            print(f"Failed to create Sound: {random_container_converted}")
                         
                         wav_files = get_sounds_for_state(json_data, index, dialogue_event, random_container)
                         print(f"wav_files: {wav_files}")
@@ -425,7 +419,7 @@ def generate_mixer_hierarchy():
                             wav_extension_removed = wav_name.replace('.wav', '')
                             print(wav_name)
                             print(wav_extension_removed)
-                            sound_path = f"{vo_actor_path}\\{random_container}\\<Sound Voice>{wav_extension_removed}"
+                            sound_path = f"{vo_actor_path}\\{random_container_converted}\\<Sound Voice>{wav_extension_removed}"
                             client.call("ak.wwise.core.audio.import", create_sound(sound_path, wav_path))
 
                 if find_dialogue_event_mixer:
