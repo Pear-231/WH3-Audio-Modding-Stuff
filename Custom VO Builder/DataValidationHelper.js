@@ -28,6 +28,13 @@ function clearDataValidationsOnRow(sheet, row)
   sheet.getRange(row, 2, 1, sheet.getMaxColumns() - 1).clearDataValidations();
 }
 
+function clearDataOnRow(sheet, row)
+{
+  Logger.log(`Running: clearDataOnRow()`);
+
+  sheet.getRange(row, 2, 1, sheet.getMaxColumns() - 1).clear();
+}
+
 function getPreviousDialogueEventRow(sheet, row, column)
 {  
   Logger.log(`Running: previousDialogueEventRow()`);
