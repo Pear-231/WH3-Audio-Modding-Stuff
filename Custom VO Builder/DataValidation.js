@@ -54,6 +54,7 @@ function populateStateGroups(sheet, row, column)
 {
   Logger.log(`Running: populateStateGroups()`);
 
+  clearDataOnRow(sheet, row)
   clearDataValidationsOnRow(sheet, row)
   
   // Get the named range value from the cell in column A
@@ -77,8 +78,6 @@ function createStatePathDropDowns(sheet, row, column)
 {
   Logger.log(`Running: createStatePathDropDowns()`);
 
-  clearDataOnRow(sheet, row)
-  
   var previousDialogueEventRow = getPreviousDialogueEventRow(sheet, row, column);
   Logger.log(`previousDialogueEventRow: ${previousDialogueEventRow}`);
 

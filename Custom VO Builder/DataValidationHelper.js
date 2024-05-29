@@ -32,7 +32,7 @@ function clearDataOnRow(sheet, row)
 {
   Logger.log(`Running: clearDataOnRow()`);
 
-  sheet.getRange(row, 2, 1, sheet.getMaxColumns() - 1).clear();
+  sheet.getRange(row, 2, 1, sheet.getMaxColumns() - 1).clearContent();
 }
 
 function getPreviousDialogueEventRow(sheet, row, column)
