@@ -1,104 +1,140 @@
+function loadStates()
+{
+  Logger.log(`Running: loadStates()`);
+
+  populateStatesDataValidation()
+}
+
+function loadDialogueEvents() 
+{
+  Logger.log(`Running: loadDialogueEvents()`);
+
+  populateDialogueEventsValidation()
+}
+
 function handleDropDownValidation(e) 
 {
+  Logger.log(`Running: handleDropDownValidation()`);
+
   var sheet = e.source.getActiveSheet();
   var sheetName = sheet.getName()
-  var cell = e.range;
-  var cellValue = e.value;
-  var row = cell.getRow();
-  var column = cell.getColumn()
 
   if (sheetName === "Battle VO" || (sheetName === "Campaign VO") || (sheetName === "Conversational Battle VO") || (sheetName === "Conversational Campaign VO") || (sheetName === "Frontend VO"))
   {
-    Logger.log(`Sheet: ${sheetName}`);
+    var cell = e.range;
+    var column = cell.getColumn()
+    var row = cell.getRow();
 
-    if (column === 1 && row >= 2) 
+    if (column === 1 && row >= 2)  
     {
-      Logger.log(`Column: ${sheetName}, Row: ${row}`);
-      var rangeToClear = sheet.getRange('B:L');
-      removeValidationFromRange(rangeToClear)
+      var cellValue = e.value;
+      var previousCellValue = e.oldValue;
+      Logger.log(`cellValue: ${cellValue}`);
+      Logger.log(`previousCellValue: ${previousCellValue}`);
 
-      if (cellValue !== "" && cellValue !== "Sounds" && cellValue !== "State Path")
-        populateStateGroups(sheet, row)
+      if (previousCellValue == "State Path")
+        clearDataValidationsOnRow(sheet, row)
 
-      else if (cellValue === "State Path") 
-        createStatePathDropDowns(sheet, row)
-    }
-  }
-}
-
-function populateStateGroups(sheet, row)
-{
-  cleanRow(sheet, row)
-  sheet.getRange(row, 2).setFormula('=TRANSPOSE(INDIRECT(A' + row + '))');
-}
-
-function createStatePathDropDowns(sheet, row)
-{
-  var targetRow = populateStatesDataValidation(sheet, row);
-  var lastColumn = sheet.getLastColumn();
-  var dataValidationSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('States Data Validation');
-  
-  for (var i = 2; i <= lastColumn; i++) 
-  {
-    var targetCell = sheet.getRange(row, i);
-    var cellCheck = sheet.getRange(targetRow, i);
-
-    if (cellCheck.getValue() !== "") 
-    {
-      targetCell.clear().clearDataValidations(); 
-      var columnIndex = i - 2; // Calculate the index for data validation range
-      var validationRange = dataValidationSheet.getRange(1, columnIndex + 1, dataValidationSheet.getLastRow(), 1); // Get the corresponding validation range for the current column
-      var rule = SpreadsheetApp.newDataValidation().requireValueInRange(validationRange).setAllowInvalid(false).build(); // Build data validation rule
-      targetCell.setDataValidation(rule); // Apply data validation rule to the cell
-    }
-  }
-}
-
-function populateStatesDataValidation(sheet, row) 
-{
-  var dataValidationSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('States Data Validation');
-
-  dataValidationSheet.getRange('A1:L1').clear(); // Clear existing data
-  
-  var conditionMet = false;
-  for (var i = 0; ; i++) 
-  {
-      var checkColumn = String.fromCharCode(65 + i % 26); // Get the column letter of the source cell
-      var column = String.fromCharCode(65 + i); // Get column letter (A-L)
-
-      while (row >= 1) 
+      if (cellValue !== undefined && cellValue !== "")
       {
-        var sourceCell = sheet.getRange(checkColumn + row);
-        var cellValue = sourceCell.getValue();
+        if (cellValue !== "Sounds" && cellValue !== "State Path")
+          populateStateGroups(sheet, row, column)
 
-        if (cellValue !== undefined && cellValue !== "" && cellValue !== "State Path" && cellValue !== "Sounds") 
-        {
-          conditionMet = true;
-          break;
-        }
-
-        row--;
+        else if (cellValue === "State Path")
+          {
+            clearDataValidationsOnRow(sheet, row)
+            createStatePathDropDowns(sheet, row, column)
+          }
       }
+    }
 
-      if (conditionMet) 
-        break;
+    createSoundsOnlyDropDown(e)
   }
-
-  for (var g = 0; g < 12; g++) // Start from column A (0) and end at column L (12)
-  {
-    var column = String.fromCharCode(65 + g); // Get column letter (A-L)
-    var sourceColumn = String.fromCharCode(65 + (g + 1)); // Get the column letter of the source cell
-    
-    var formula = "=INDIRECT('" + sheet.getName() + "'!" + sourceColumn + row + ")";
-    dataValidationSheet.getRange(column + '1').setFormula(formula);
-  }
-
-  return row;
 }
 
-function populateDialogueEventValidation() 
+function populateStateGroups(sheet, row, column)
 {
+  Logger.log(`Running: populateStateGroups()`);
+
+  clearDataValidationsOnRow(sheet, row)
+  
+  // Get the named range value from the cell in column A
+  var namedRangeName = sheet.getRange(row, column).getValue();
+  var namedRange = SpreadsheetApp.getActiveSpreadsheet().getRangeByName(namedRangeName);
+
+  if (namedRange)
+  {
+    // Retrieve the values from the named range
+    var rangeValues = namedRange.getValues();
+
+    // Flatten the values into a single array
+    var flattenedValues = rangeValues.flat();
+
+    // Resize the target range to fit all the values
+    sheet.getRange(row, 2, 1, flattenedValues.length).setValues([flattenedValues]);
+  }
+}
+
+function createStatePathDropDowns(sheet, row, column)
+{
+  Logger.log(`Running: createStatePathDropDowns()`);
+
+  var previousDialogueEventRow = getPreviousDialogueEventRow(sheet, row, column);
+  Logger.log(`previousDialogueEventRow: ${previousDialogueEventRow}`);
+
+  var dialogueEvent = sheet.getRange(previousDialogueEventRow, column).getValue();
+  Logger.log(`dialogueEvent: ${dialogueEvent}`);
+
+  var dialogueEventsSheet = "Dialogue Events";
+  var headersRow = 2
+  var dialogueEventRange = getColumnRangeByValue(dialogueEventsSheet, dialogueEvent, headersRow, false);
+  var dialogueEventRangeAddress = dialogueEventRange.getA1Notation();
+  Logger.log(`dialogueEventRangeAddress: ${dialogueEventRangeAddress}`);
+
+  var dialogueEventSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(dialogueEventsSheet);
+  var fullDialogueEventRange = dialogueEventSheet.getRange(dialogueEventRangeAddress);
+  var dialogueEventValues = fullDialogueEventRange.getValues();
+  Logger.log(`dialogueEventValues: ${dialogueEventValues}`);
+
+  var flattenedValues = dialogueEventValues.flat();
+  var flattenedValuesLength = flattenedValues.length;
+  Logger.log(`flattenedValuesLength: ${flattenedValuesLength}`);
+
+  var validationRules = []; // Create an array to store the validation rules
+
+  // Create the drop downs and collect validation rules
+  for (var i = 0; i < flattenedValuesLength; i++) 
+  {
+    var targetCell = sheet.getRange(row, i + 1 + column); // Adjusting column index by adding 'column'
+    var stateGroup = flattenedValues[i];
+    Logger.log(`stateGroup: ${stateGroup}`);
+    
+    var statesSheet = "States Data Validation";
+    var headersRow = 1
+    var stateGroupRange = getColumnRangeByValue(statesSheet, stateGroup, headersRow, true);
+    var stateGroupRangeAddress = stateGroupRange.getA1Notation();
+    Logger.log(`stateGroupRangeAddress: ${stateGroupRangeAddress}`);
+
+    var statesSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(statesSheet);
+    var fullStateGroupRange = statesSheet.getRange(stateGroupRangeAddress);
+
+    var rule = SpreadsheetApp.newDataValidation().requireValueInRange(fullStateGroupRange).setAllowInvalid(false).build(); // Build data validation rule
+    validationRules.push({ cell: targetCell, rule: rule }); // Store the validation rule and the corresponding target cell
+  }
+
+  // Apply all collected validation rules at once
+  for (var j = 0; j < validationRules.length; j++)
+    validationRules[j].cell.setDataValidation(validationRules[j].rule);
+}
+
+function populateDialogueEventsValidation() 
+{
+  Logger.log(`Running: populateDialogueEventsValidation()`);
+
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Dialogue Events Data Validation");
+  var parentBnkColumn = sheet.getRange("B2:B" + sheet.getLastRow());
+  parentBnkColumn.clear();
+
   var lastRow = sheet.getLastRow();
   var dialogueEvents = sheet.getRange("A2:A" + lastRow).getValues();
   var results = [];
@@ -114,14 +150,49 @@ function populateDialogueEventValidation()
   outputRange.setValues(results);
 }
 
-function loadModdedStates()
+function populateStatesDataValidation()
 {
-  createNamedRanges("Vanilla & Modded States", 1);
-}
+  Logger.log(`Running: populateStatesDataValidation()`);
 
-function loadVanillaData() 
-{
-  createNamedRanges("Vanilla States", 2);
-  createNamedRanges("Dialogue Events", 2);
-  populateDialogueEventValidation()
+  var vanillaStates = createDictionaryFromSheet("Vanilla States");
+  var moddedStates = createDictionaryFromSheet("Modded States");
+  var allStates = mergeDictionaries(vanillaStates, moddedStates);
+
+  var sheetName = "States Data Validation";
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+
+  // Clear existing data in the sheet
+  sheet.clear();
+
+  // Set column headers
+  var headers = Object.keys(allStates);
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+
+  // Determine the number of rows needed
+  var numRows = Math.max.apply(null,
+    headers.map(
+      function(header)
+      {
+        return allStates[header].length;
+      }
+    )
+  );
+
+  // Prepare data to be pasted all at once
+  var data = [];
+  for (var i = 0; i < numRows; i++)
+  {
+    var rowData = [];
+    headers.forEach(
+      function(header)
+      {
+        rowData.push(allStates[header][i] || ""); // Fill empty cells with empty string
+      }
+    );
+    data.push(rowData);
+  }
+
+  // Set the data in the sheet
+  if (data.length > 0)
+    sheet.getRange(2, 1, data.length, headers.length).setValues(data);
 }
