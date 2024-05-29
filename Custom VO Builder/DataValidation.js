@@ -47,8 +47,6 @@ function handleDropDownValidation(e)
           }
       }
     }
-
-    createSoundsOnlyDropDown(e)
   }
 }
 
