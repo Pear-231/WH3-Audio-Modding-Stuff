@@ -45,6 +45,11 @@ function handleDropDownValidation(e)
             clearDataValidationsOnRow(sheet, row)
             createStatePathDropDowns(sheet, row, column)
           }
+        else if (cellValue === "Sounds")
+          {
+            clearDataOnRow(sheet, row)
+            clearDataValidationsOnRow(sheet, row)
+          }
       }
     }
   }
