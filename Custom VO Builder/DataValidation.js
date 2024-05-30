@@ -62,21 +62,25 @@ function populateStateGroups(sheet, row, column)
   clearDataOnRow(sheet, row)
   clearDataValidationsOnRow(sheet, row)
   
-  // Get the named range value from the cell in column A
-  var namedRangeName = sheet.getRange(row, column).getValue();
-  var namedRange = SpreadsheetApp.getActiveSpreadsheet().getRangeByName(namedRangeName);
+  var dialogueEvent = sheet.getRange(row, column).getValue();
+  Logger.log(`dialogueEvent: ${dialogueEvent}`);
 
-  if (namedRange)
-  {
-    // Retrieve the values from the named range
-    var rangeValues = namedRange.getValues();
+  var dialogueEventsSheet = "Dialogue Events";
+  var headersRow = 2
+  var dialogueEventRange = getColumnRangeByValue(dialogueEventsSheet, dialogueEvent, headersRow, false);
+  var dialogueEventRangeAddress = dialogueEventRange.getA1Notation();
+  Logger.log(`dialogueEventRangeAddress: ${dialogueEventRangeAddress}`);
 
-    // Flatten the values into a single array
-    var flattenedValues = rangeValues.flat();
+  var dialogueEventSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(dialogueEventsSheet);
+  var fullDialogueEventRange = dialogueEventSheet.getRange(dialogueEventRangeAddress);
+  var dialogueEventValues = fullDialogueEventRange.getValues();
+  Logger.log(`dialogueEventValues: ${dialogueEventValues}`);
 
-    // Resize the target range to fit all the values
-    sheet.getRange(row, 2, 1, flattenedValues.length).setValues([flattenedValues]);
-  }
+  var flattenedValues = dialogueEventValues.flat();
+  var flattenedValuesLength = flattenedValues.length;
+
+  // Resize the target range to fit all the values
+  sheet.getRange(row, 2, 1, flattenedValuesLength).setValues([flattenedValues]);
 }
 
 function createStatePathDropDowns(sheet, row, column)
@@ -102,7 +106,6 @@ function createStatePathDropDowns(sheet, row, column)
 
   var flattenedValues = dialogueEventValues.flat();
   var flattenedValuesLength = flattenedValues.length;
-  Logger.log(`flattenedValuesLength: ${flattenedValuesLength}`);
 
   var validationRules = []; // Create an array to store the validation rules
 

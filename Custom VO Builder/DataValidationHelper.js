@@ -60,7 +60,8 @@ function createDictionaryFromSheet(sheetName)
   var dictionary = {};
   
   // Loop through each non-empty column
-  for (var col = 1; col <= lastColumn; col++) {
+  for (var col = 1; col <= lastColumn; col++) 
+  {
     var key = sheet.getRange(2, col).getValue(); // Get the value in row 2 of the current column as key
 
     if (key) {
