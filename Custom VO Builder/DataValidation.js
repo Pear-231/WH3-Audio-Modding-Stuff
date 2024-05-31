@@ -33,23 +33,31 @@ function handleDropDownValidation(e)
       Logger.log(`previousCellValue: ${previousCellValue}`);
 
       if (previousCellValue == "State Path")
-        clearDataValidationsOnRow(sheet, row)
+        sheet.getRange(row, 1, 1, sheet.getMaxColumns() - 1).clearDataValidations();
+      
+      // something for if the previous value was not Sounds or State Path then redo the validation
 
       if (cellValue !== undefined && cellValue !== "")
       {
         if (cellValue !== "Sounds" && cellValue !== "State Path")
+        {
+          sheet.getRange(row, 1, 1, sheet.getMaxColumns() - 1).clearDataValidations();
+          sheet.getRange(row, 2, 1, sheet.getMaxColumns() - 1).clearContent();
           populateStateGroups(sheet, row, column)
+        }
 
         else if (cellValue === "State Path")
-          {
-            clearDataValidationsOnRow(sheet, row)
-            createStatePathDropDowns(sheet, row, column)
-          }
+        {
+          sheet.getRange(row, 1, 1, sheet.getMaxColumns() - 1).clearDataValidations();
+          sheet.getRange(row, 2, 1, sheet.getMaxColumns() - 1).clearContent();
+          createStatePathDropDowns(sheet, row, column);
+        }
+
         else if (cellValue === "Sounds")
-          {
-            clearDataOnRow(sheet, row)
-            clearDataValidationsOnRow(sheet, row)
-          }
+        {
+          sheet.getRange(row, 1, 1, sheet.getMaxColumns() - 1).clearDataValidations();
+          sheet.getRange(row, 2, 1, sheet.getMaxColumns() - 1).clearContent();
+        }
       }
     }
   }
@@ -59,27 +67,13 @@ function populateStateGroups(sheet, row, column)
 {
   Logger.log(`Running: populateStateGroups()`);
 
-  clearDataOnRow(sheet, row)
-  clearDataValidationsOnRow(sheet, row)
-  
   var dialogueEvent = sheet.getRange(row, column).getValue();
   Logger.log(`dialogueEvent: ${dialogueEvent}`);
 
-  var dialogueEventsSheet = "Dialogue Events";
-  var headersRow = 2
-  var dialogueEventRange = getColumnRangeByValue(dialogueEventsSheet, dialogueEvent, headersRow, false);
-  var dialogueEventRangeAddress = dialogueEventRange.getA1Notation();
-  Logger.log(`dialogueEventRangeAddress: ${dialogueEventRangeAddress}`);
-
-  var dialogueEventSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(dialogueEventsSheet);
-  var fullDialogueEventRange = dialogueEventSheet.getRange(dialogueEventRangeAddress);
-  var dialogueEventValues = fullDialogueEventRange.getValues();
-  Logger.log(`dialogueEventValues: ${dialogueEventValues}`);
-
-  var flattenedValues = dialogueEventValues.flat();
+  var dialogueEventStateGroups = getSavedValue("dialogueEventStateGroups")
+  var flattenedValues = dialogueEventStateGroups[dialogueEvent].flat();
   var flattenedValuesLength = flattenedValues.length;
 
-  // Resize the target range to fit all the values
   sheet.getRange(row, 2, 1, flattenedValuesLength).setValues([flattenedValues]);
 }
 

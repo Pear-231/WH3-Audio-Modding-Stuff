@@ -161,3 +161,59 @@ function getColumnRangeByValue(sheetName, searchValue, headersRow, useEmptyCells
     return null;
   }
 }
+
+function getColumnValues(sheetName, column, headerRow)
+{
+  Logger.log(`Running: getColumnValues()`);
+
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = spreadsheet.getSheetByName(sheetName);
+
+  var headerRange = sheet.getRange(`${column}${headerRow}`);
+  header = headerRange.getValue();
+
+  var lastRow = sheet.getLastRow();
+  var range = sheet.getRange(`${column}${headerRow + 1}:${column}${lastRow}`);
+  var values = range.getValues();
+  var list = values.flat().filter(String);
+
+  Logger.log(`Header: ${header}`);
+  Logger.log(`List: ${list}`);
+  
+  return {
+    header: header,
+    list: list
+  };
+}
+
+function getDialogueEventStateGroups(dialogueEvent)
+{
+  Logger.log(`Running: getDialogueEventStateGroups()`);
+
+  var dialogueEventsSheet = "Dialogue Events";
+  var headersRow = 2
+  var dialogueEventRange = getColumnRangeByValue(dialogueEventsSheet, dialogueEvent, headersRow, false);
+  var dialogueEventRangeAddress = dialogueEventRange.getA1Notation();
+  Logger.log(`dialogueEventRangeAddress: ${dialogueEventRangeAddress}`);
+
+  var dialogueEventSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(dialogueEventsSheet);
+  var fullDialogueEventRange = dialogueEventSheet.getRange(dialogueEventRangeAddress);
+  var dialogueEventValues = fullDialogueEventRange.getValues();
+
+  return dialogueEventValues;
+}
+
+function columnToLetter(column)
+{
+  Logger.log(`Running: columnToLetter()`);
+
+  var temp, letter = '';
+  while (column > 0)
+  {
+      temp = (column - 1) % 26;
+      letter = String.fromCharCode(temp + 65) + letter;
+      column = (column - temp - 1) / 26;
+  }
+
+  return letter;
+}
