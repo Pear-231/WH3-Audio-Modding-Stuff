@@ -1,4 +1,4 @@
-# Audio Modding Stuff
+# Audio-Modding-Stuff
 > A Wwise man doesn't blame his tools.
 
 Some tools for Total War: Warhammer 3 audio modding for personal / public use.
