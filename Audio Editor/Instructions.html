@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instructions</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        p {
+            color: #666;
+        }
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        /* Styles for tabs */
+        .tab {
+            display: flex;
+            justify-content: space-evenly; /* Center the tabs */
+            border: 1px solid #ccc;
+            background-color: #f1f1f1;
+            margin-bottom: 10px; /* Reduce margin-bottom */
+        }
+
+        /* Style the buttons inside the tab */
+        .tab button {
+            background-color: inherit;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 10px 0; /* Adjust padding */
+            transition: 0.3s;
+            flex: 1; /* Make the buttons equally split the space */
+        }
+
+        /* Change background color of buttons on hover */
+        .tab button:hover {
+            background-color: #ddd;
+        }
+
+        /* Create an active/current tablink class */
+        .tab button.active {
+            background-color: #ccc;
+        }
+
+        /* Style the tab content */
+        .tabcontent {
+            display: none;
+            padding: 10px; /* Reduce padding */
+            border-top: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="tab">
+        <button class="tablinks" onclick="openTab(event, 'tab1')" id="defaultOpen">VO Builders</button>
+        <button class="tablinks" onclick="openTab(event, 'tab2')">Modded States</button>
+    </div>
+
+    <div id="tab1" class="tabcontent" style="display: block;">
+        <h2>VO Builders</h2>
+        <p><b>NOTE:</b> Before building any VO, go to the menu and click Audio Editor then Load States, and Load Dialogue Events.<br><br>Column A contains drop downs of all the Dialogue Events you can choose from for the type of VO you are building, as well as a an option called "State Path".<br><br>To build your VO, first select a Dialogue Event from the drop down. 
+            This will automatically populate the Dialogue Event row with the State Groups for that Dialogue Event, and create rows for "State Path" and "Sounds". The "State Path" row contains drop downs for all the possible States within each State Group.
+            <br><br>Then create your State Path by selecting a State from the drop down. Each State Path should be unique.<br><br>Next, on the Sounds row, add the file paths to the sounds you want the State Path to play (include as many sounds as you like). 
+            Each cell should contain only one file path e.g. <br><br>Cell B4:<br><code>"D:\Ole_is_a_donkey.wav"</code><br><br>Cell B5:<br><code>"D:\Dank_not_based_memes.wav"</code><br><br>Cell B6:<br><code>"D:\Ace_is_a_womaniser.wav"</code>
+            <br><br>Cell B7:<br><code>"D:\Kou_runs_warhammer_hub👀.wav"</code><br><br>Cell B8:<br><code>"D:\grackul_likes_hammers.wav"</code><br><br>Finally either add another State Path or select another Dialogue Event and repeat the process.
+            <br><br>Once you're finished building your VO, go to the menu and click Audio Editor then Download Sheet as Audio Project.</p>
+    </div>
+
+    <div id="tab2" class="tabcontent">
+        <h2>Modded States</h2>
+        <p>This sheet contains your custom modded states.<br><br>Add new states below each State Group column header then go to the menu and click Audio Editor then Load States.<br><br>The names of your States should ideally follow vanilla naming conventions.</bt></p>
+    </div>
+
+    <script>
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+
+        document.getElementById("defaultOpen").click();
+    </script>
+</body>
+</html>
